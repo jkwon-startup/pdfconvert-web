@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SettingsDialog } from "./SettingsDialog";
+import { TermsDialog } from "./TermsDialog";
 import {
   PROVIDERS,
   PROVIDER_LIST,
@@ -32,6 +33,10 @@ import {
   setSelectedModel,
   setSelectedProvider,
 } from "@/lib/keys";
+import {
+  getTermsAccepted,
+  setTermsAccepted as persistTermsAccepted,
+} from "@/lib/terms";
 
 type PageStatus = "pending" | "converting" | "done" | "error";
 
@@ -57,6 +62,10 @@ export function Converter() {
   });
   const [hydrated, setHydrated] = useState(false);
 
+  // 이용 약관 동의
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [termsAccepted, setTermsAcceptedState] = useState(false);
+
   // PDF
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [numPages, setNumPages] = useState(0);
@@ -80,6 +89,7 @@ export function Converter() {
     setProvider(p);
     setModel(m);
     refreshSavedKeys();
+    setTermsAcceptedState(getTermsAccepted());
     setHydrated(true);
   }, []);
 
@@ -246,6 +256,37 @@ export function Converter() {
     batchCancelRef.current = true;
   }
 
+  // ── 변환 시작: 약관 미동의 시 모달 게이트 ──────────────────────────────
+  function handleStartConvert() {
+    if (!termsAccepted) {
+      setTermsOpen(true);
+      return;
+    }
+    runBatchConvert();
+  }
+
+  function handleTermsAccept() {
+    persistTermsAccepted(true);
+    setTermsAcceptedState(true);
+    setTermsOpen(false);
+    // 동의 직후 변환 즉시 시작
+    runBatchConvert();
+  }
+
+  function handleTermsCancel() {
+    setTermsOpen(false);
+  }
+
+  function revokeTerms() {
+    if (
+      typeof window !== "undefined" &&
+      window.confirm("동의를 철회하면 다음 변환 시 다시 안내가 표시됩니다. 철회할까요?")
+    ) {
+      persistTermsAccepted(false);
+      setTermsAcceptedState(false);
+    }
+  }
+
   async function retryPage(pageNum: number) {
     if (!apiKey) return;
     setPages((prev) =>
@@ -341,6 +382,7 @@ export function Converter() {
         onOpenChange={setSettingsOpen}
         onSaved={refreshSavedKeys}
       />
+      <TermsDialog open={termsOpen} onAccept={handleTermsAccept} onCancel={handleTermsCancel} />
 
       {/* Provider / Model 선택 */}
       <Card>
@@ -501,9 +543,29 @@ export function Converter() {
           <CardTitle className="text-base">변환</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <Alert className="border-amber-500/30 bg-amber-500/5">
+            <AlertDescription className="text-xs">
+              ⚠️ 변환은 사용자 책임으로 진행됩니다. 변환하려는 PDF의{" "}
+              <strong>저작권</strong>·<strong>API 비용</strong>·<strong>결과 정확성</strong> 등 모든
+              책임은 요청자(본인)에게 있습니다.
+              {hydrated && termsAccepted && (
+                <>
+                  {" "}
+                  <button
+                    type="button"
+                    onClick={revokeTerms}
+                    className="underline hover:text-zinc-700 dark:hover:text-zinc-300"
+                  >
+                    동의 철회
+                  </button>
+                </>
+              )}
+            </AlertDescription>
+          </Alert>
+
           <div className="flex flex-wrap items-center gap-3">
             <Button
-              onClick={runBatchConvert}
+              onClick={handleStartConvert}
               disabled={!arrayBufferRef.current || !hasKey || batchRunning || pages.length === 0}
               size="lg"
             >
