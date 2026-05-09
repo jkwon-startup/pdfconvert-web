@@ -56,6 +56,14 @@ export function SettingsDialog({ open, onOpenChange, onSaved }: SettingsDialogPr
   function handleSave() {
     setPersistMode(persist);
     (Object.keys(keys) as Provider[]).forEach((p) => setKey(p, keys[p].trim()));
+    if (typeof window !== "undefined") {
+      console.info("[pdfconvert] keys saved", {
+        persist,
+        anthropicLen: keys.anthropic.trim().length,
+        googleLen: keys.google.trim().length,
+        openaiLen: keys.openai.trim().length,
+      });
+    }
     onSaved?.();
     onOpenChange(false);
   }

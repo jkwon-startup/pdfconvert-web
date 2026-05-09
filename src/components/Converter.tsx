@@ -299,6 +299,27 @@ export function Converter() {
     | { ok: true; markdown: string }
     | { ok: false; status: number; error: string; friendly: string }
   > {
+    // 진단: 키/provider/model 상태를 콘솔에 출력 (값 자체는 마스킹)
+    if (typeof window !== "undefined") {
+      const masked = apiKey
+        ? `${apiKey.slice(0, 7)}…${apiKey.slice(-4)} (len=${apiKey.length})`
+        : "<EMPTY>";
+      console.info("[pdfconvert] convert call", {
+        provider,
+        model,
+        apiKeyMasked: masked,
+        inputKind: input.kind,
+      });
+    }
+    if (!apiKey || !apiKey.trim()) {
+      return {
+        ok: false,
+        status: 0,
+        error: "API key is empty (savedKeys[provider] returned empty string)",
+        friendly:
+          `${PROVIDERS[provider].shortName} API 키가 비어 있습니다. ⚙ API 키 설정에서 키를 입력해주세요.`,
+      };
+    }
     const maxAttempts = 3;
     let lastResult:
       | { ok: false; status: number; error: string }
