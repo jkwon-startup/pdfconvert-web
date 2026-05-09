@@ -33,6 +33,49 @@ export default function Home() {
 
         <Converter />
 
+        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/40 p-5 sm:p-6">
+          <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">
+            여행가J 와 함께
+          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4">
+            AI 활용에 관심 있으시다면, 무료 지식 나눔 커뮤니티에 함께 해주세요.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <a
+              href="https://open.kakao.com/o/gIf2qyRf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex flex-col gap-0.5 rounded-lg border border-amber-300/50 bg-amber-50/60 dark:bg-amber-500/5 dark:border-amber-500/30 px-4 py-3 transition hover:bg-amber-50 dark:hover:bg-amber-500/10"
+            >
+              <span className="text-sm font-semibold text-amber-900 dark:text-amber-200 inline-flex items-center gap-1">
+                여행가J의 AI 지식나눔
+                <span aria-hidden className="text-amber-700/70 dark:text-amber-200/60">
+                  ↗
+                </span>
+              </span>
+              <span className="text-xs text-amber-700/80 dark:text-amber-200/70">
+                오픈채팅 · 단톡 참여 코드: <code className="font-mono">gpters</code>
+              </span>
+            </a>
+            <a
+              href="https://litt.ly/jkwon"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex flex-col gap-0.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60 px-4 py-3 transition hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
+            >
+              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 inline-flex items-center gap-1">
+                여행가J 프로필
+                <span aria-hidden className="text-zinc-500 dark:text-zinc-500">
+                  ↗
+                </span>
+              </span>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                강의 · 콘텐츠 · 협업 문의
+              </span>
+            </a>
+          </div>
+        </section>
+
         <footer className="text-xs text-zinc-500 dark:text-zinc-500 text-center pt-6 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
           <p>
             Built by{" "}
@@ -44,18 +87,9 @@ export default function Home() {
             >
               여행가J
             </a>{" "}
-            · TS² · MIT License ·{" "}
+            · MIT License ·{" "}
             <a className="underline hover:text-zinc-700 dark:hover:text-zinc-300" href="/privacy">
               Privacy
-            </a>{" "}
-            ·{" "}
-            <a
-              className="underline hover:text-zinc-700 dark:hover:text-zinc-300"
-              href="https://github.com/jkwon-startup/pdfconvert-web"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub
             </a>
           </p>
           <p>

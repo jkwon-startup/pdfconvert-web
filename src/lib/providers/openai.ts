@@ -22,12 +22,28 @@ export const openaiInfo: ProviderInfo = {
 };
 
 export async function convertOpenAI({
-  imageBase64,
+  input,
   prompt,
   apiKey,
   model,
   signal,
 }: ConvertParams): Promise<ConvertResult> {
+  const content =
+    input.kind === "image"
+      ? [
+          { type: "text", text: prompt },
+          {
+            type: "image_url",
+            image_url: { url: `data:image/png;base64,${input.imageBase64}` },
+          },
+        ]
+      : [
+          {
+            type: "text",
+            text: `${prompt}\n\n--- 슬라이드 원문 텍스트 ---\n${input.slideText}`,
+          },
+        ];
+
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -38,18 +54,7 @@ export async function convertOpenAI({
       body: JSON.stringify({
         model,
         max_tokens: 4096,
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: prompt },
-              {
-                type: "image_url",
-                image_url: { url: `data:image/png;base64,${imageBase64}` },
-              },
-            ],
-          },
-        ],
+        messages: [{ role: "user", content }],
       }),
       signal,
     });

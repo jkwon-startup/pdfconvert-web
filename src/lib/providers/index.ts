@@ -31,4 +31,11 @@ export async function convertWithProvider(
   }
 }
 
-export type { Provider, ProviderInfo, ProviderModel, ConvertParams, ConvertResult } from "./types";
+export type {
+  Provider,
+  ProviderInfo,
+  ProviderModel,
+  ConvertParams,
+  ConvertResult,
+  ConvertInput,
+} from "./types";

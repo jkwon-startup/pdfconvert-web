@@ -26,12 +26,20 @@ export const googleInfo: ProviderInfo = {
 };
 
 export async function convertGemini({
-  imageBase64,
+  input,
   prompt,
   apiKey,
   model,
   signal,
 }: ConvertParams): Promise<ConvertResult> {
+  const parts =
+    input.kind === "image"
+      ? [
+          { inline_data: { mime_type: "image/png", data: input.imageBase64 } },
+          { text: prompt },
+        ]
+      : [{ text: `${prompt}\n\n--- 슬라이드 원문 텍스트 ---\n${input.slideText}` }];
+
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
       model
@@ -40,14 +48,7 @@ export async function convertGemini({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { inline_data: { mime_type: "image/png", data: imageBase64 } },
-              { text: prompt },
-            ],
-          },
-        ],
+        contents: [{ parts }],
         generationConfig: { maxOutputTokens: 4096 },
       }),
       signal,
@@ -58,9 +59,9 @@ export async function convertGemini({
       return { ok: false, status: response.status, error: errBody };
     }
     const data = await response.json();
-    const parts = data?.candidates?.[0]?.content?.parts;
-    const text = Array.isArray(parts)
-      ? parts.map((p: { text?: string }) => p.text ?? "").join("")
+    const responseParts = data?.candidates?.[0]?.content?.parts;
+    const text = Array.isArray(responseParts)
+      ? responseParts.map((p: { text?: string }) => p.text ?? "").join("")
       : "";
     return { ok: true, markdown: text };
   } catch (err) {

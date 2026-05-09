@@ -18,8 +18,15 @@ export interface ProviderInfo {
   defaultModel: string;
 }
 
+/**
+ * LLM 호출 입력. PDF 페이지는 image, PPTX 슬라이드는 text 로 전달.
+ */
+export type ConvertInput =
+  | { kind: "image"; imageBase64: string }
+  | { kind: "text"; slideText: string };
+
 export interface ConvertParams {
-  imageBase64: string;
+  input: ConvertInput;
   prompt: string;
   apiKey: string;
   model: string;

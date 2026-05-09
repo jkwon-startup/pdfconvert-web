@@ -22,12 +22,28 @@ export const anthropicInfo: ProviderInfo = {
 };
 
 export async function convertAnthropic({
-  imageBase64,
+  input,
   prompt,
   apiKey,
   model,
   signal,
 }: ConvertParams): Promise<ConvertResult> {
+  const content =
+    input.kind === "image"
+      ? [
+          {
+            type: "image",
+            source: { type: "base64", media_type: "image/png", data: input.imageBase64 },
+          },
+          { type: "text", text: prompt },
+        ]
+      : [
+          {
+            type: "text",
+            text: `${prompt}\n\n--- 슬라이드 원문 텍스트 ---\n${input.slideText}`,
+          },
+        ];
+
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -40,18 +56,7 @@ export async function convertAnthropic({
       body: JSON.stringify({
         model,
         max_tokens: 4096,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "image",
-                source: { type: "base64", media_type: "image/png", data: imageBase64 },
-              },
-              { type: "text", text: prompt },
-            ],
-          },
-        ],
+        messages: [{ role: "user", content }],
       }),
       signal,
     });

@@ -19,13 +19,14 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SettingsDialog } from "./SettingsDialog";
 import { TermsDialog } from "./TermsDialog";
+import { PptxToPdfGuideDialog } from "./PptxToPdfGuideDialog";
 import {
   PROVIDERS,
   PROVIDER_LIST,
   DEFAULT_PROMPT,
   convertWithProvider,
 } from "@/lib/providers";
-import type { Provider } from "@/lib/providers";
+import type { Provider, ConvertInput } from "@/lib/providers";
 import {
   getKey,
   getSelectedModel,
@@ -67,6 +68,17 @@ export function Converter() {
   // 이용 약관 동의
   const [termsOpen, setTermsOpen] = useState(false);
   const [termsAccepted, setTermsAcceptedState] = useState(false);
+
+  // PPTX 안내 모달
+  const [pptxGuide, setPptxGuide] = useState<{
+    open: boolean;
+    fileName: string;
+    file: File | null;
+  }>({ open: false, fileName: "", file: null });
+
+  // 입력 모드: PDF 페이지(이미지) 또는 PPTX 슬라이드 텍스트
+  const [sourceMode, setSourceMode] = useState<"pdf" | "pptx-text">("pdf");
+  const pptxSlidesRef = useRef<string[]>([]);
 
   // PDF
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -165,10 +177,22 @@ export function Converter() {
 
   // ── PDF 로드 ────────────────────────────────────────────────────────────
   async function handleFile(file: File) {
-    if (!file.name.toLowerCase().endsWith(".pdf") && file.type !== "application/pdf") {
-      setPdfError("PDF 파일만 업로드 가능합니다.");
+    const lowerName = file.name.toLowerCase();
+    const isPdf = lowerName.endsWith(".pdf") || file.type === "application/pdf";
+    const isPptx =
+      lowerName.endsWith(".pptx") ||
+      file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+
+    if (isPptx) {
+      setPptxGuide({ open: true, fileName: file.name, file });
       return;
     }
+    if (!isPdf) {
+      setPdfError("PDF 또는 PPTX 파일만 업로드 가능합니다.");
+      return;
+    }
+    setSourceMode("pdf");
+    pptxSlidesRef.current = [];
     setPdfFile(file);
     setPdfError("");
     setPages([]);
@@ -211,6 +235,48 @@ export function Converter() {
   }
 
   // ── 페이지 N → PNG base64 ───────────────────────────────────────────────
+  // ── PPTX 텍스트 폴백: 모달의 "텍스트만 추출" 콜백 ──────────────────────
+  async function handlePptxTextFallback() {
+    const file = pptxGuide.file;
+    if (!file) return;
+    setPptxGuide({ open: false, fileName: "", file: null });
+    setPdfError("");
+    setPages([]);
+    setRestoredFileName("");
+    setNumPages(0);
+    arrayBufferRef.current = null;
+    sessionStorage.removeItem(LAST_RESULT_KEY);
+
+    try {
+      const { extractPptxSlides } = await import("@/lib/extractors/pptx-text");
+      const { slides, numSlides } = await extractPptxSlides(file);
+      pptxSlidesRef.current = slides;
+      setSourceMode("pptx-text");
+      setPdfFile(file);
+      setNumPages(numSlides);
+      setPages(
+        Array.from({ length: numSlides }, (_, i) => ({
+          num: i + 1,
+          status: "pending" as PageStatus,
+        }))
+      );
+    } catch (err) {
+      setPdfError(
+        `PPTX 텍스트 추출 실패: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  }
+
+  // ── 페이지/슬라이드 N 의 LLM 입력 ─────────────────────────────────────
+  async function getPageInput(pageNum: number): Promise<ConvertInput> {
+    if (sourceMode === "pptx-text") {
+      const text = pptxSlidesRef.current[pageNum - 1] ?? "";
+      return { kind: "text", slideText: text || "(빈 슬라이드)" };
+    }
+    const base64 = await pageToBase64(pageNum);
+    return { kind: "image", imageBase64: base64 };
+  }
+
   async function pageToBase64(pageNum: number): Promise<string> {
     if (!arrayBufferRef.current) throw new Error("PDF 데이터가 없습니다");
     const pdfjs = await import("pdfjs-dist");
@@ -252,9 +318,9 @@ export function Converter() {
 
       const start = performance.now();
       try {
-        const base64 = await pageToBase64(pageNum);
+        const input = await getPageInput(pageNum);
         const result = await convertWithProvider(provider, {
-          imageBase64: base64,
+          input,
           prompt: DEFAULT_PROMPT,
           apiKey,
           model,
@@ -345,9 +411,9 @@ export function Converter() {
     );
     const start = performance.now();
     try {
-      const base64 = await pageToBase64(pageNum);
+      const input = await getPageInput(pageNum);
       const result = await convertWithProvider(provider, {
-        imageBase64: base64,
+        input,
         prompt: DEFAULT_PROMPT,
         apiKey,
         model,
@@ -399,14 +465,23 @@ export function Converter() {
   }
 
   // ── 결과 ───────────────────────────────────────────────────────────────
-  const combinedMarkdown = pages
+  const unitLabel = sourceMode === "pptx-text" ? "Slide" : "Page";
+  const PPTX_TEXT_HEADER = `> ⚠️ 이 결과는 PPTX 텍스트 추출 모드로 생성되었습니다. 이미지·차트·SmartArt 의 시각 정보는 포함되지 않습니다. 더 정확한 변환을 원하시면 PowerPoint / Keynote / Google Slides 에서 PDF로 변환 후 다시 업로드해주세요.\n\n`;
+
+  const bodyMarkdown = pages
     .filter((p) => p.status === "done" && p.markdown)
-    .map((p) => (insertPageHeaders ? `## Page ${p.num}\n\n${p.markdown}` : p.markdown))
+    .map((p) => (insertPageHeaders ? `## ${unitLabel} ${p.num}\n\n${p.markdown}` : p.markdown))
     .join("\n\n");
+
+  const combinedMarkdown = bodyMarkdown
+    ? sourceMode === "pptx-text"
+      ? PPTX_TEXT_HEADER + bodyMarkdown
+      : bodyMarkdown
+    : "";
 
   function download(format: "md" | "txt") {
     if (!combinedMarkdown) return;
-    const baseName = (pdfFile?.name || restoredFileName || "converted").replace(/\.pdf$/i, "");
+    const baseName = (pdfFile?.name || restoredFileName || "converted").replace(/\.(pdf|pptx)$/i, "");
     const content = format === "txt" ? markdownToPlainText(combinedMarkdown) : combinedMarkdown;
     const mime = format === "md" ? "text/markdown" : "text/plain";
     const blob = new Blob([content], { type: `${mime};charset=utf-8` });
@@ -437,6 +512,12 @@ export function Converter() {
         onSaved={refreshSavedKeys}
       />
       <TermsDialog open={termsOpen} onAccept={handleTermsAccept} onCancel={handleTermsCancel} />
+      <PptxToPdfGuideDialog
+        open={pptxGuide.open}
+        fileName={pptxGuide.fileName}
+        onClose={() => setPptxGuide({ open: false, fileName: "", file: null })}
+        onTryTextFallback={handlePptxTextFallback}
+      />
 
       {/* Provider / Model 선택 */}
       <Card>
@@ -555,7 +636,7 @@ export function Converter() {
             <Input
               id="pdf-input"
               type="file"
-              accept="application/pdf"
+              accept="application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,.pdf,.pptx"
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
