@@ -17,6 +17,8 @@ export const anthropicInfo: ProviderInfo = {
     },
     { id: "claude-sonnet-4-6", label: "claude-sonnet-4-6", pricePerPageHint: "~$0.015 / 페이지" },
     { id: "claude-opus-4-7", label: "claude-opus-4-7", pricePerPageHint: "~$0.05 / 페이지" },
+    { id: "claude-opus-4-6", label: "claude-opus-4-6 (legacy)", pricePerPageHint: "~$0.05 / 페이지" },
+    { id: "claude-sonnet-4-5", label: "claude-sonnet-4-5 (legacy)" },
     { id: "claude-3-7-sonnet-latest", label: "claude-3-7-sonnet-latest (구형)" },
   ],
 };
