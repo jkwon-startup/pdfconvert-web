@@ -376,9 +376,15 @@ export function Converter() {
   const apiKey = savedKeys[provider];
   const hasKey = !!apiKey;
 
+  // PDF는 arrayBuffer, PPTX 텍스트 모드는 pptxSlidesRef 가 있으면 변환 가능
+  const hasSourceData =
+    sourceMode === "pptx-text"
+      ? pptxSlidesRef.current.length > 0
+      : !!arrayBufferRef.current;
+
   // ── 전체 변환 ───────────────────────────────────────────────────────────
   async function runBatchConvert() {
-    if (!arrayBufferRef.current || !apiKey || pages.length === 0) return;
+    if (!hasSourceData || !apiKey || pages.length === 0) return;
 
     batchCancelRef.current = false;
     setBatchRunning(true);
@@ -852,7 +858,7 @@ export function Converter() {
           <div className="flex flex-wrap items-center gap-3">
             <Button
               onClick={handleStartConvert}
-              disabled={!arrayBufferRef.current || !hasKey || batchRunning || pages.length === 0}
+              disabled={!hasSourceData || !hasKey || batchRunning || pages.length === 0}
               size="lg"
             >
               {batchRunning
