@@ -146,7 +146,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved }: SettingsDialogPr
                   : "border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
               }`}
             >
-              <div className="font-medium">영구 저장</div>
+              <div className="font-medium">브라우저 저장</div>
               <div className="text-xs text-zinc-500 mt-0.5">localStorage · 다음 방문에도 유지</div>
             </button>
             <button

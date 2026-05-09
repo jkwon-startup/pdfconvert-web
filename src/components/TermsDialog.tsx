@@ -48,13 +48,13 @@ export function TermsDialog({ open, onAccept, onCancel }: TermsDialogProps) {
           />
           <Section
             icon="📊"
-            title="결과 무보증"
+            title="결과 검수"
             body="LLM 특성상 변환 결과의 정확성·완전성은 보장되지 않습니다. 누락·왜곡·오역이 발생할 수 있으니, 중요한 문서는 반드시 사람의 검토를 거쳐 사용하세요."
           />
           <Section
             icon="🌐"
             title="데이터 처리"
-            body="PDF는 본 브라우저에서 페이지 이미지로 변환된 뒤, 사용자가 선택한 LLM 제공사로 직접 전송됩니다. 각 제공사의 데이터 보관·학습 정책은 사용자가 직접 확인해야 합니다. 본 서비스 운영자는 PDF·API 키·변환 결과를 수집·저장하지 않습니다."
+            body="PDF는 본 브라우저에서 페이지 이미지로 변환된 뒤, 사용자가 선택한 LLM API로 처리됩니다. 본 서비스 운영자는 PDF·API 키·변환 결과를 수집·저장하지 않습니다."
           />
         </div>
 
