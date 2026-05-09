@@ -100,35 +100,57 @@ export function SettingsDialog({ open, onOpenChange, onSaved }: SettingsDialogPr
             ))}
           </TabsList>
 
-          {PROVIDER_LIST.map((p) => (
-            <TabsContent key={p.id} value={p.id} className="space-y-3 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor={`key-${p.id}`}>{p.name} API Key</Label>
-                <Input
-                  id={`key-${p.id}`}
-                  type={showKeys ? "text" : "password"}
-                  placeholder={p.keyPlaceholder}
-                  value={keys[p.id]}
-                  onChange={(e) =>
-                    setKeys((prev) => ({ ...prev, [p.id]: e.target.value }))
-                  }
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-                <p className="text-xs text-zinc-500">
-                  키 발급:{" "}
-                  <a
-                    href={p.consoleUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-zinc-700 dark:hover:text-zinc-300"
-                  >
-                    {p.consoleUrl.replace(/^https?:\/\//, "")}
-                  </a>
-                </p>
-              </div>
-            </TabsContent>
-          ))}
+          {PROVIDER_LIST.map((p) => {
+            const trimmed = keys[p.id].trim();
+            const expectedPrefix = p.keyPrefix; // sk-ant- / AIza / sk-
+            const prefixOk = !trimmed || trimmed.startsWith(expectedPrefix);
+            return (
+              <TabsContent key={p.id} value={p.id} className="space-y-3 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`key-${p.id}`}>{p.name} API Key</Label>
+                  <Input
+                    id={`key-${p.id}`}
+                    type={showKeys ? "text" : "password"}
+                    placeholder={p.keyPlaceholder}
+                    value={keys[p.id]}
+                    onChange={(e) =>
+                      setKeys((prev) => ({ ...prev, [p.id]: e.target.value }))
+                    }
+                    autoComplete="off"
+                    spellCheck={false}
+                    className={!prefixOk ? "border-amber-500 focus-visible:ring-amber-500/40" : ""}
+                  />
+                  {!prefixOk && (
+                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                      ⚠️ {p.shortName} 키는 보통 <code className="font-mono">{expectedPrefix}</code> 로 시작합니다. 다른 제공사 키를 잘못 입력했는지 확인해주세요.
+                    </p>
+                  )}
+                  {trimmed && prefixOk && (
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                      ✓ {p.shortName} 키 형식 일치 ({trimmed.length}자)
+                    </p>
+                  )}
+                  <p className="text-xs text-zinc-500">
+                    키 발급:{" "}
+                    <a
+                      href={p.consoleUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-zinc-700 dark:hover:text-zinc-300"
+                    >
+                      {p.consoleUrl.replace(/^https?:\/\//, "")}
+                    </a>
+                    {p.id === "anthropic" && (
+                      <>
+                        {" "}— ⚠️ <strong>claude.ai 구독 키 아님</strong>. console.anthropic.com 에서{" "}
+                        <strong>API 키</strong> 를 별도 발급받아야 합니다.
+                      </>
+                    )}
+                  </p>
+                </div>
+              </TabsContent>
+            );
+          })}
         </Tabs>
 
         <label className="flex items-center gap-2 text-sm cursor-pointer">
