@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://pdfconvert-web.vercel.app"),
-  title: "여행가J의 PPT, PDF convert — 내 API 키로 직접",
+  title: "여행가J의 PPT, PDF convert",
   description:
-    "Claude · Gemini · GPT 골라서. PDF·PPTX 를 LLM Vision 으로 마크다운/텍스트 변환하는 무료 오픈소스 웹서비스. BYO API Key, 클라이언트 사이드 처리, 100% 무료.",
+    "Claude · Gemini · GPT 골라서. PPT·PDF 를 마크다운으로 변환하는 무료 오픈소스 웹서비스. BYO API Key, 클라이언트 사이드 처리.",
   keywords: [
     "PDF to Markdown",
     "PDF 마크다운 변환",
@@ -30,14 +30,14 @@ export const metadata: Metadata = {
   authors: [{ name: "여행가J", url: "https://litt.ly/jkwon" }],
   openGraph: {
     title: "여행가J의 PPT, PDF convert",
-    description: "PDF·PPTX 를 마크다운으로, 내 API 키로 직접. 무료 + 오픈소스.",
+    description: "PPT, PDF를 마크다운으로. Claude · Gemini · GPT. 무료 · 오픈소스.",
     type: "website",
     locale: "ko_KR",
   },
   twitter: {
     card: "summary_large_image",
     title: "여행가J의 PPT, PDF convert",
-    description: "PDF·PPTX 를 마크다운으로, 내 API 키로 직접. 무료 + 오픈소스.",
+    description: "PPT, PDF를 마크다운으로. Claude · Gemini · GPT. 무료 · 오픈소스.",
   },
 };
 

@@ -49,32 +49,31 @@ export default async function Image() {
               display: "flex",
               alignItems: "center",
               gap: "12px",
-              color: "#92400e",
-              fontSize: "20px",
-              fontWeight: 600,
-              padding: "8px 16px",
+              color: "#fafafa",
+              fontSize: "22px",
+              fontWeight: 700,
+              padding: "10px 22px",
               borderRadius: "999px",
-              background: "rgba(252, 211, 77, 0.3)",
+              background: "#0a0a0a",
               alignSelf: "flex-start",
             }}
           >
-            BYO API Key · 클라이언트 사이드 처리
+            여행가J의
           </div>
 
           <div
             style={{
               display: "flex",
               flexDirection: "column",
-              fontSize: "84px",
+              fontSize: "96px",
               fontWeight: 800,
               color: "#0a0a0a",
-              lineHeight: 1.1,
+              lineHeight: 1.05,
               letterSpacing: "-0.04em",
             }}
           >
-            <span>PDF · PPTX 를</span>
-            <span>마크다운으로,</span>
-            <span style={{ color: "#525252" }}>내 API 키로 직접</span>
+            <span>PPT, PDF를</span>
+            <span style={{ color: "#a16207" }}>마크다운으로</span>
           </div>
         </div>
 

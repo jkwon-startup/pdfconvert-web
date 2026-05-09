@@ -86,6 +86,7 @@ export function Converter() {
 
   // 입력 모드: PDF 페이지(이미지) 또는 PPTX 슬라이드 텍스트
   const [sourceMode, setSourceMode] = useState<"pdf" | "pptx-text">("pdf");
+  const [sourceReady, setSourceReady] = useState(false);
   const pptxSlidesRef = useRef<string[]>([]);
 
   // PDF
@@ -172,6 +173,7 @@ export function Converter() {
     setPages([]);
     setRestoredFileName("");
     setSourceMode("pdf");
+    setSourceReady(false);
     arrayBufferRef.current = null;
     pptxSlidesRef.current = [];
     batchCancelRef.current = false;
@@ -216,11 +218,18 @@ export function Converter() {
       await loadPptxAsText(file);
       return;
     }
+    if (lowerName.endsWith(".ppt") || file.type === "application/vnd.ms-powerpoint") {
+      setPdfError("구버전 PPT(.ppt)는 지원하지 않습니다. PowerPoint에서 .pptx 또는 PDF로 저장한 뒤 업로드해주세요.");
+      setSourceReady(false);
+      return;
+    }
     if (!isPdf) {
       setPdfError("PDF 또는 PPTX 파일만 업로드 가능합니다.");
+      setSourceReady(false);
       return;
     }
     setSourceMode("pdf");
+    setSourceReady(false);
     pptxSlidesRef.current = [];
     setPdfFile(file);
     setPdfError("");
@@ -258,7 +267,9 @@ export function Converter() {
           status: "pending" as PageStatus,
         }))
       );
+      setSourceReady(true);
     } catch (err) {
+      setSourceReady(false);
       setPdfError(err instanceof Error ? err.message : String(err));
     }
   }
@@ -271,6 +282,7 @@ export function Converter() {
     setPages([]);
     setRestoredFileName("");
     setNumPages(0);
+    setSourceReady(false);
     arrayBufferRef.current = null;
     sessionStorage.removeItem(LAST_RESULT_KEY);
 
@@ -287,7 +299,9 @@ export function Converter() {
           status: "pending" as PageStatus,
         }))
       );
+      setSourceReady(slides.length > 0);
     } catch (err) {
+      setSourceReady(false);
       setPdfError(
         `PPTX 텍스트 추출 실패: ${err instanceof Error ? err.message : String(err)}`
       );
@@ -376,11 +390,8 @@ export function Converter() {
   const apiKey = savedKeys[provider];
   const hasKey = !!apiKey;
 
-  // PDF는 arrayBuffer, PPTX 텍스트 모드는 pptxSlidesRef 가 있으면 변환 가능
-  const hasSourceData =
-    sourceMode === "pptx-text"
-      ? pptxSlidesRef.current.length > 0
-      : !!arrayBufferRef.current;
+  // PDF/PPTX 로딩 완료 여부. 파일 데이터 자체는 ref에 보관하지만, 버튼 활성화는 state로 고정한다.
+  const hasSourceData = sourceReady;
 
   // ── 전체 변환 ───────────────────────────────────────────────────────────
   async function runBatchConvert() {
@@ -691,7 +702,7 @@ export function Converter() {
               <p className="text-xs text-zinc-500">
                 예상: {currentModelInfo.pricePerPageHint}
                 {numPages > 0 &&
-                  ` · ${numPages}페이지 PDF → 추정 비용 페이지 단가 × ${numPages}`}
+                  ` · ${numPages}${sourceMode === "pptx-text" ? "슬라이드 PPTX" : "페이지 PDF"} → 추정 비용 단가 × ${numPages}`}
               </p>
             )}
           </div>
@@ -751,7 +762,7 @@ export function Converter() {
 
           {pdfError && (
             <Alert className="border-red-500/40 bg-red-500/5">
-              <AlertTitle className="text-red-700 dark:text-red-400">PDF 로딩 오류</AlertTitle>
+              <AlertTitle className="text-red-700 dark:text-red-400">파일 로딩 오류</AlertTitle>
               <AlertDescription className="text-xs">{pdfError}</AlertDescription>
             </Alert>
           )}
@@ -864,7 +875,7 @@ export function Converter() {
               {batchRunning
                 ? `변환 중... (${doneCount}/${pages.length})`
                 : pages.length > 0
-                  ? `${pages.length}페이지 변환 시작`
+                  ? `${pages.length}${sourceMode === "pptx-text" ? "슬라이드" : "페이지"} 변환 시작`
                   : "파일 업로드 필요"}
             </Button>
             {batchRunning && (
