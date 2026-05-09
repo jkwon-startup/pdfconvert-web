@@ -602,17 +602,27 @@ export function Converter() {
           <div className="space-y-2">
             <Label htmlFor="model">모델</Label>
             <Select value={model} onValueChange={(v) => v && handleModelChange(v)}>
-              <SelectTrigger id="model">
+              <SelectTrigger id="model" className="w-full">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)] w-(--radix-select-trigger-width)">
                 {currentProviderInfo.models.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {m.label}
-                    {m.recommended && " — 권장"}
-                    {m.pricePerPageHint && (
-                      <span className="text-zinc-500 ml-2 text-xs">{m.pricePerPageHint}</span>
-                    )}
+                  <SelectItem key={m.id} value={m.id} className="py-2">
+                    <div className="flex flex-col items-start gap-0.5 w-full">
+                      <span className="font-mono text-sm flex items-center gap-1.5">
+                        {m.label}
+                        {m.recommended && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-sans font-medium rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+                            권장
+                          </span>
+                        )}
+                      </span>
+                      {m.pricePerPageHint && (
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                          {m.pricePerPageHint}
+                        </span>
+                      )}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
