@@ -53,6 +53,8 @@ interface PageInfo {
   status: PageStatus;
   markdown?: string;
   error?: string;
+  rawError?: string;
+  errorStatus?: number;
   elapsedMs?: number;
 }
 
@@ -209,7 +211,9 @@ export function Converter() {
       file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 
     if (isPptx) {
-      setPptxGuide({ open: true, fileName: file.name, file });
+      // PPTX는 즉시 텍스트 추출 자동 시작 (모달 게이트 제거)
+      // PDF 변환 권장 안내는 변환 카드에 inline으로 노출됨
+      await loadPptxAsText(file);
       return;
     }
     if (!isPdf) {
@@ -260,10 +264,8 @@ export function Converter() {
   }
 
   // ── 페이지 N → PNG base64 ───────────────────────────────────────────────
-  // ── PPTX 텍스트 폴백: 모달의 "텍스트만 추출" 콜백 ──────────────────────
-  async function handlePptxTextFallback() {
-    const file = pptxGuide.file;
-    if (!file) return;
+  // ── PPTX 텍스트 추출: 업로드 즉시 자동 호출 ────────────────────────────
+  async function loadPptxAsText(file: File) {
     setPptxGuide({ open: false, fileName: "", file: null });
     setPdfError("");
     setPages([]);
@@ -383,7 +385,14 @@ export function Converter() {
           setPages((prev) =>
             prev.map((p) =>
               p.num === pageNum
-                ? { ...p, status: "error", error: result.friendly, elapsedMs }
+                ? {
+                    ...p,
+                    status: "error",
+                    error: result.friendly,
+                    rawError: result.error,
+                    errorStatus: result.status,
+                    elapsedMs,
+                  }
                 : p
             )
           );
@@ -466,7 +475,14 @@ export function Converter() {
         setPages((prev) =>
           prev.map((p) =>
             p.num === pageNum
-              ? { ...p, status: "error", error: result.friendly, elapsedMs }
+              ? {
+                  ...p,
+                  status: "error",
+                  error: result.friendly,
+                  rawError: result.error,
+                  errorStatus: result.status,
+                  elapsedMs,
+                }
               : p
           )
         );
@@ -554,7 +570,6 @@ export function Converter() {
         open={pptxGuide.open}
         fileName={pptxGuide.fileName}
         onClose={() => setPptxGuide({ open: false, fileName: "", file: null })}
-        onTryTextFallback={handlePptxTextFallback}
       />
 
       {/* Provider / Model 선택 */}
@@ -771,9 +786,24 @@ export function Converter() {
               <Alert className="border-red-500/40 bg-red-500/5">
                 <AlertTitle className="text-red-700 dark:text-red-400 text-sm">
                   변환 실패 — 페이지 {firstError.num}
+                  {firstError.errorStatus !== undefined && (
+                    <span className="ml-2 font-mono text-xs opacity-80">
+                      HTTP {firstError.errorStatus}
+                    </span>
+                  )}
                 </AlertTitle>
                 <AlertDescription className="text-xs space-y-2">
                   <p className="whitespace-pre-wrap">{firstError.error}</p>
+                  {firstError.rawError && (
+                    <details className="text-zinc-600 dark:text-zinc-400">
+                      <summary className="cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100">
+                        🔍 원본 응답 본문 (디버그)
+                      </summary>
+                      <pre className="mt-2 p-2 bg-zinc-100 dark:bg-zinc-900 rounded text-[10px] whitespace-pre-wrap break-all max-h-40 overflow-auto">
+                        {firstError.rawError}
+                      </pre>
+                    </details>
+                  )}
                   <p className="text-zinc-600 dark:text-zinc-400">
                     💡 같은 오류가 반복되면 <strong>모델을 변경</strong>하거나 <strong>다른 파일</strong>로 시도해보세요.
                     {" "}
