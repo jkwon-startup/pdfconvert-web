@@ -45,3 +45,7 @@ next-env.d.ts
 /.scratch
 /sample-pdfs
 *.local.md
+
+# 운영자 로컬 산출물 (개발문서/기획서) — GitHub 업로드 차단
+/개발문서-*.md
+/기획서-*.md

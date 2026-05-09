@@ -608,10 +608,10 @@ export function Converter() {
         </CardContent>
       </Card>
 
-      {/* PDF 업로드 */}
+      {/* 파일 업로드 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">PDF 업로드</CardTitle>
+          <CardTitle className="text-base">파일 업로드</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <label
@@ -630,7 +630,7 @@ export function Converter() {
           >
             <span className="text-3xl">📄</span>
             <span className="text-sm font-medium">
-              PDF 파일을 끌어다 놓거나 클릭하여 선택
+              파일을 끌어다 놓거나 클릭하여 선택
             </span>
             <span className="text-xs text-zinc-500">최대 50페이지 권장</span>
             <Input
@@ -726,7 +726,7 @@ export function Converter() {
                 ? `변환 중... (${doneCount}/${pages.length})`
                 : pages.length > 0
                   ? `${pages.length}페이지 변환 시작`
-                  : "PDF 업로드 필요"}
+                  : "파일 업로드 필요"}
             </Button>
             {batchRunning && (
               <Button variant="outline" onClick={cancelBatch}>

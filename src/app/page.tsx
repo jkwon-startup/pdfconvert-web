@@ -6,7 +6,7 @@ export default function Home() {
       <header className="border-b border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-950/60 backdrop-blur sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <a href="/" className="font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-            pdfconvert<span className="text-primary">·</span>web
+            여행가J의 PPT<span className="text-primary">,</span> PDF convert
           </a>
           <nav className="flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-400">
             <a href="/privacy" className="hover:text-zinc-900 dark:hover:text-zinc-100">
