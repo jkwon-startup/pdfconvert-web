@@ -27,14 +27,6 @@ export default function Home() {
           <a href="/test/d2" className={cn(buttonVariants({ size: "lg" }))}>
             지금 테스트하기 (D2 검증)
           </a>
-          <a
-            href="https://github.com/jkwon-startup/pdfconvert-web"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
-          >
-            GitHub
-          </a>
         </div>
 
         <footer className="mt-12 text-xs text-zinc-500 dark:text-zinc-500">
