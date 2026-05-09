@@ -33,16 +33,15 @@ export default function Home() {
                 "radial-gradient(ellipse 60% 70% at 50% 0%, rgb(254 243 199 / 0.5) 0%, transparent 60%)",
             }}
           />
-          <span className="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold rounded-full bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 shadow-sm">
+          <span className="inline-flex items-center gap-2 px-6 py-2.5 text-2xl font-semibold rounded-full bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 shadow-md">
             여행가J의
           </span>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tighter text-zinc-950 dark:text-zinc-50 leading-[1.05]">
             PPT, PDF를
             <br />
             <span className="bg-gradient-to-r from-zinc-900 via-zinc-700 to-amber-700 dark:from-zinc-100 dark:via-zinc-300 dark:to-amber-300 bg-clip-text text-transparent">
-              마크다운으로,
+              마크다운으로
             </span>
-            <br className="sm:hidden" /> 내 API 키로 직접
           </h1>
           <p className="text-base text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">
             Claude · Gemini · GPT 중 골라서.
