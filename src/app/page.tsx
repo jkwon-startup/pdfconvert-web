@@ -12,14 +12,6 @@ export default function Home() {
             <a href="/privacy" className="hover:text-zinc-900 dark:hover:text-zinc-100">
               Privacy
             </a>
-            <a
-              href="https://github.com/jkwon-startup/pdfconvert-web"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-zinc-900 dark:hover:text-zinc-100"
-            >
-              GitHub
-            </a>
           </nav>
         </div>
       </header>
@@ -67,7 +59,7 @@ export default function Home() {
             </a>
           </p>
           <p>
-            본 서비스는 변환 도구를 제공할 뿐이며, 변환하려는 PDF의 저작권·API 비용·결과 정확성 등
+            본 서비스는 변환 도구를 제공할 뿐이며, 변환하려는 PDF의 저작권·API 비용·결과 검수 등
             모든 책임은 변환을 요청한 사용자 본인에게 있습니다.
           </p>
         </footer>

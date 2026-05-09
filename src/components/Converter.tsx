@@ -618,9 +618,8 @@ export function Converter() {
         <CardContent className="space-y-4">
           <Alert className="border-amber-500/30 bg-amber-500/5">
             <AlertDescription className="text-xs">
-              ⚠️ 변환은 사용자 책임으로 진행됩니다. 변환하려는 PDF의{" "}
-              <strong>저작권</strong>·<strong>API 비용</strong>·<strong>결과 정확성</strong> 등 모든
-              책임은 요청자(본인)에게 있습니다.
+              ⚠️ 변환하려는 PDF의 <strong>저작권</strong>·<strong>API 비용</strong>·
+              <strong>결과 검수</strong> 등은 사용자(요청자) 본인의 책임으로 진행됩니다.
               {hydrated && termsAccepted && (
                 <>
                   {" "}
