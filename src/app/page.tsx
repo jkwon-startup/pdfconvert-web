@@ -9,6 +9,9 @@ export default function Home() {
             여행가J의 PPT<span className="text-primary">,</span> PDF convert
           </a>
           <nav className="flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+            <a href="/about" className="hover:text-zinc-900 dark:hover:text-zinc-100">
+              About
+            </a>
             <a href="/privacy" className="hover:text-zinc-900 dark:hover:text-zinc-100">
               Privacy
             </a>

@@ -20,6 +20,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SettingsDialog } from "./SettingsDialog";
 import { TermsDialog } from "./TermsDialog";
 import { PptxToPdfGuideDialog } from "./PptxToPdfGuideDialog";
+import { MarkdownPreview } from "./MarkdownPreview";
 import {
   PROVIDERS,
   PROVIDER_LIST,
@@ -27,6 +28,11 @@ import {
   convertWithProvider,
 } from "@/lib/providers";
 import type { Provider, ConvertInput } from "@/lib/providers";
+import {
+  friendlyErrorMessage,
+  isRetryable,
+  backoffDelay,
+} from "@/lib/providers/error-messages";
 import {
   getKey,
   getSelectedModel,
@@ -92,6 +98,7 @@ export function Converter() {
   const [pages, setPages] = useState<PageInfo[]>([]);
   const [batchRunning, setBatchRunning] = useState(false);
   const [insertPageHeaders, setInsertPageHeaders] = useState(false);
+  const [resultView, setResultView] = useState<"markdown" | "rendered">("markdown");
   const batchCancelRef = useRef(false);
 
   // 드래그
@@ -267,6 +274,39 @@ export function Converter() {
     }
   }
 
+  // ── LLM 호출 (자동 백오프 포함, 최대 3회 재시도) ──────────────────────
+  async function callWithBackoff(input: ConvertInput): Promise<
+    | { ok: true; markdown: string }
+    | { ok: false; status: number; error: string; friendly: string }
+  > {
+    const maxAttempts = 3;
+    let lastResult:
+      | { ok: false; status: number; error: string }
+      | null = null;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const result = await convertWithProvider(provider, {
+        input,
+        prompt: DEFAULT_PROMPT,
+        apiKey,
+        model,
+      });
+      if (result.ok) return result;
+      lastResult = result;
+      if (!isRetryable(result.status) || attempt === maxAttempts - 1) break;
+      await new Promise((res) => setTimeout(res, backoffDelay(attempt)));
+    }
+    if (!lastResult) {
+      return { ok: false, status: 0, error: "Unknown", friendly: "알 수 없는 오류" };
+    }
+    const { title, hint } = friendlyErrorMessage(provider, lastResult.status, lastResult.error);
+    return {
+      ok: false,
+      status: lastResult.status,
+      error: lastResult.error,
+      friendly: `${title} — ${hint}`,
+    };
+  }
+
   // ── 페이지/슬라이드 N 의 LLM 입력 ─────────────────────────────────────
   async function getPageInput(pageNum: number): Promise<ConvertInput> {
     if (sourceMode === "pptx-text") {
@@ -319,23 +359,13 @@ export function Converter() {
       const start = performance.now();
       try {
         const input = await getPageInput(pageNum);
-        const result = await convertWithProvider(provider, {
-          input,
-          prompt: DEFAULT_PROMPT,
-          apiKey,
-          model,
-        });
+        const result = await callWithBackoff(input);
         const elapsedMs = performance.now() - start;
         if (!result.ok) {
           setPages((prev) =>
             prev.map((p) =>
               p.num === pageNum
-                ? {
-                    ...p,
-                    status: "error",
-                    error: `HTTP ${result.status}: ${result.error.slice(0, 200)}`,
-                    elapsedMs,
-                  }
+                ? { ...p, status: "error", error: result.friendly, elapsedMs }
                 : p
             )
           );
@@ -412,23 +442,13 @@ export function Converter() {
     const start = performance.now();
     try {
       const input = await getPageInput(pageNum);
-      const result = await convertWithProvider(provider, {
-        input,
-        prompt: DEFAULT_PROMPT,
-        apiKey,
-        model,
-      });
+      const result = await callWithBackoff(input);
       const elapsedMs = performance.now() - start;
       if (!result.ok) {
         setPages((prev) =>
           prev.map((p) =>
             p.num === pageNum
-              ? {
-                  ...p,
-                  status: "error",
-                  error: `HTTP ${result.status}: ${result.error.slice(0, 200)}`,
-                  elapsedMs,
-                }
+              ? { ...p, status: "error", error: result.friendly, elapsedMs }
               : p
           )
         );
@@ -772,6 +792,30 @@ export function Converter() {
                     결과 마크다운 ({combinedMarkdown.length.toLocaleString()}자)
                   </Label>
                   <div className="ml-auto flex flex-wrap gap-2">
+                    <div className="inline-flex rounded-md border border-zinc-200 dark:border-zinc-800 overflow-hidden text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setResultView("markdown")}
+                        className={`px-2.5 py-1 transition ${
+                          resultView === "markdown"
+                            ? "bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
+                            : "bg-transparent text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                        }`}
+                      >
+                        원본
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setResultView("rendered")}
+                        className={`px-2.5 py-1 transition ${
+                          resultView === "rendered"
+                            ? "bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
+                            : "bg-transparent text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                        }`}
+                      >
+                        렌더링
+                      </button>
+                    </div>
                     <Button size="sm" variant="outline" onClick={copyMarkdown}>
                       복사
                     </Button>
@@ -783,12 +827,16 @@ export function Converter() {
                     </Button>
                   </div>
                 </div>
-                <Textarea
-                  id="combined"
-                  value={combinedMarkdown}
-                  readOnly
-                  className="min-h-[300px] font-mono text-xs"
-                />
+                {resultView === "markdown" ? (
+                  <Textarea
+                    id="combined"
+                    value={combinedMarkdown}
+                    readOnly
+                    className="min-h-[300px] font-mono text-xs"
+                  />
+                ) : (
+                  <MarkdownPreview markdown={combinedMarkdown} />
+                )}
               </div>
             </>
           )}

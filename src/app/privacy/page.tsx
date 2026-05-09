@@ -18,6 +18,9 @@ export default function PrivacyPage() {
             <a href="/" className="hover:text-zinc-900 dark:hover:text-zinc-100">
               ← 홈
             </a>
+            <a href="/about" className="hover:text-zinc-900 dark:hover:text-zinc-100">
+              About
+            </a>
             <a
               href="https://github.com/jkwon-startup/pdfconvert-web"
               target="_blank"
