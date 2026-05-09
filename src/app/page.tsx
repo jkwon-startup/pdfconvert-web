@@ -22,15 +22,15 @@ export default function Home() {
       <main className="max-w-3xl mx-auto px-4 py-10 space-y-8">
         <section className="space-y-3 text-center">
           <span className="inline-flex items-center gap-2 px-2.5 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
-            BYO API Key · 클라이언트 사이드 처리
+            여행가J의
           </span>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            PDF를 마크다운으로,
+            PPT, PDF를 마크다운으로,
             <br className="sm:hidden" /> 내 API 키로 직접
           </h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto">
-            Claude · Gemini · GPT 중 골라서. PDF는 브라우저에서 처리되고, API 키는 본 브라우저에만
-            저장됩니다. 우리 서버를 거치지 않습니다.
+            Claude · Gemini · GPT 중 골라서. PDF·PPTX 는 브라우저에서 처리되고, API 키는 본
+            브라우저에만 저장됩니다. 우리 서버를 거치지 않습니다.
           </p>
         </section>
 
