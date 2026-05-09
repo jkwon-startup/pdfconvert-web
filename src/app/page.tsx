@@ -9,8 +9,8 @@ export default function Home() {
             pdfconvert<span className="text-primary">·</span>web
           </a>
           <nav className="flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-            <a href="/test/d2" className="hover:text-zinc-900 dark:hover:text-zinc-100">
-              D2 검증
+            <a href="/privacy" className="hover:text-zinc-900 dark:hover:text-zinc-100">
+              Privacy
             </a>
             <a
               href="https://github.com/jkwon-startup/pdfconvert-web"
@@ -53,6 +53,10 @@ export default function Home() {
               여행가J
             </a>{" "}
             · TS² · MIT License ·{" "}
+            <a className="underline hover:text-zinc-700 dark:hover:text-zinc-300" href="/privacy">
+              Privacy
+            </a>{" "}
+            ·{" "}
             <a
               className="underline hover:text-zinc-700 dark:hover:text-zinc-300"
               href="https://github.com/jkwon-startup/pdfconvert-web"

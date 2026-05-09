@@ -167,7 +167,10 @@ export function SettingsDialog({ open, onOpenChange, onSaved }: SettingsDialogPr
         <Alert className="border-amber-500/30 bg-amber-500/5">
           <AlertDescription className="text-xs">
             🔒 <strong>보안 정책</strong>: 모든 키는 본 브라우저에만 저장되며, 변환 요청 시
-            브라우저에서 직접 LLM API로 전달됩니다. 우리 서버를 통과하지 않습니다.
+            브라우저에서 직접 LLM API로 전달됩니다. 우리 서버를 통과하지 않습니다.{" "}
+            <a href="/privacy" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
+              자세히
+            </a>
           </AlertDescription>
         </Alert>
 

@@ -37,6 +37,7 @@ import {
   getTermsAccepted,
   setTermsAccepted as persistTermsAccepted,
 } from "@/lib/terms";
+import { markdownToPlainText } from "@/lib/markdown-to-text";
 
 type PageStatus = "pending" | "converting" | "done" | "error";
 
@@ -49,6 +50,7 @@ interface PageInfo {
 }
 
 const RENDER_SCALE = 2;
+const LAST_RESULT_KEY = "pdfconvert_last_result_v1";
 
 export function Converter() {
   // Settings
@@ -70,6 +72,7 @@ export function Converter() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [numPages, setNumPages] = useState(0);
   const [pdfError, setPdfError] = useState("");
+  const [restoredFileName, setRestoredFileName] = useState<string>("");
   const arrayBufferRef = useRef<ArrayBuffer | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -82,7 +85,7 @@ export function Converter() {
   // 드래그
   const [isDragging, setIsDragging] = useState(false);
 
-  // 초기 hydration: 저장된 키/선택 로드
+  // 초기 hydration: 저장된 키/선택 로드 + 이전 변환 결과 복원
   useEffect(() => {
     const p = getSelectedProvider();
     const m = getSelectedModel(p, PROVIDERS[p].defaultModel);
@@ -90,8 +93,54 @@ export function Converter() {
     setModel(m);
     refreshSavedKeys();
     setTermsAcceptedState(getTermsAccepted());
+
+    try {
+      const saved = sessionStorage.getItem(LAST_RESULT_KEY);
+      if (saved) {
+        const data = JSON.parse(saved) as {
+          fileName?: string;
+          pages?: PageInfo[];
+          insertPageHeaders?: boolean;
+        };
+        if (Array.isArray(data.pages) && data.pages.some((p) => p.status === "done")) {
+          setPages(data.pages);
+          setRestoredFileName(data.fileName ?? "");
+          if (typeof data.insertPageHeaders === "boolean") {
+            setInsertPageHeaders(data.insertPageHeaders);
+          }
+        }
+      }
+    } catch {
+      // 파싱 실패 시 무시
+    }
+
     setHydrated(true);
   }, []);
+
+  // 변환 결과를 sessionStorage 에 저장 (변환 완료된 페이지가 있을 때만)
+  useEffect(() => {
+    if (!hydrated) return;
+    const hasDone = pages.some((p) => p.status === "done");
+    if (!hasDone) return;
+    try {
+      sessionStorage.setItem(
+        LAST_RESULT_KEY,
+        JSON.stringify({
+          fileName: pdfFile?.name ?? restoredFileName,
+          pages,
+          insertPageHeaders,
+        })
+      );
+    } catch {
+      // quota 초과 등 무시
+    }
+  }, [pages, pdfFile, restoredFileName, insertPageHeaders, hydrated]);
+
+  function clearLastResult() {
+    sessionStorage.removeItem(LAST_RESULT_KEY);
+    setPages([]);
+    setRestoredFileName("");
+  }
 
   function refreshSavedKeys() {
     setSavedKeys({
@@ -123,8 +172,10 @@ export function Converter() {
     setPdfFile(file);
     setPdfError("");
     setPages([]);
+    setRestoredFileName("");
     setNumPages(0);
     arrayBufferRef.current = null;
+    sessionStorage.removeItem(LAST_RESULT_KEY);
 
     try {
       const pdfjs = await import("pdfjs-dist");
@@ -353,13 +404,16 @@ export function Converter() {
     .map((p) => (insertPageHeaders ? `## Page ${p.num}\n\n${p.markdown}` : p.markdown))
     .join("\n\n");
 
-  function downloadMarkdown() {
-    if (!combinedMarkdown || !pdfFile) return;
-    const blob = new Blob([combinedMarkdown], { type: "text/markdown;charset=utf-8" });
+  function download(format: "md" | "txt") {
+    if (!combinedMarkdown) return;
+    const baseName = (pdfFile?.name || restoredFileName || "converted").replace(/\.pdf$/i, "");
+    const content = format === "txt" ? markdownToPlainText(combinedMarkdown) : combinedMarkdown;
+    const mime = format === "md" ? "text/markdown" : "text/plain";
+    const blob = new Blob([content], { type: `${mime};charset=utf-8` });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = pdfFile.name.replace(/\.pdf$/i, "") + ".md";
+    a.download = `${baseName}.${format}`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -531,6 +585,25 @@ export function Converter() {
             </Alert>
           )}
 
+          {hydrated && restoredFileName && !pdfFile && (
+            <Alert className="border-blue-500/30 bg-blue-500/5">
+              <AlertTitle className="text-blue-700 dark:text-blue-400 text-sm">
+                이전 변환 결과를 복원했습니다
+              </AlertTitle>
+              <AlertDescription className="text-xs">
+                <code>{restoredFileName}</code> · 다운로드/복사는 가능하지만 재시도/추가 변환은 PDF를
+                다시 업로드해야 합니다.{" "}
+                <button
+                  type="button"
+                  onClick={clearLastResult}
+                  className="underline hover:text-zinc-700 dark:hover:text-zinc-300"
+                >
+                  결과 지우기
+                </button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="rounded-md border border-zinc-200 dark:border-zinc-800 overflow-auto bg-white dark:bg-zinc-900 max-h-[300px]">
             <canvas ref={canvasRef} className="block max-w-full h-auto" />
           </div>
@@ -618,11 +691,14 @@ export function Converter() {
                   <Label htmlFor="combined">
                     결과 마크다운 ({combinedMarkdown.length.toLocaleString()}자)
                   </Label>
-                  <div className="ml-auto flex gap-2">
+                  <div className="ml-auto flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" onClick={copyMarkdown}>
                       복사
                     </Button>
-                    <Button size="sm" onClick={downloadMarkdown}>
+                    <Button size="sm" variant="outline" onClick={() => download("txt")}>
+                      .txt 다운로드
+                    </Button>
+                    <Button size="sm" onClick={() => download("md")}>
                       .md 다운로드
                     </Button>
                   </div>
