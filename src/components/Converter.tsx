@@ -161,6 +161,24 @@ export function Converter() {
     setRestoredFileName("");
   }
 
+  // 변환 카드의 "초기화" 버튼 — 파일/결과/상태 모두 리셋, 다시 업로드 가능
+  function resetAll() {
+    sessionStorage.removeItem(LAST_RESULT_KEY);
+    setPdfFile(null);
+    setNumPages(0);
+    setPdfError("");
+    setPages([]);
+    setRestoredFileName("");
+    setSourceMode("pdf");
+    arrayBufferRef.current = null;
+    pptxSlidesRef.current = [];
+    batchCancelRef.current = false;
+    if (canvasRef.current) {
+      canvasRef.current.width = 0;
+      canvasRef.current.height = 0;
+    }
+  }
+
   function refreshSavedKeys() {
     setSavedKeys({
       anthropic: getKey("anthropic"),
@@ -746,6 +764,40 @@ export function Converter() {
             </AlertDescription>
           </Alert>
 
+          {(() => {
+            const firstError = pages.find((p) => p.status === "error");
+            if (!firstError?.error) return null;
+            return (
+              <Alert className="border-red-500/40 bg-red-500/5">
+                <AlertTitle className="text-red-700 dark:text-red-400 text-sm">
+                  변환 실패 — 페이지 {firstError.num}
+                </AlertTitle>
+                <AlertDescription className="text-xs space-y-2">
+                  <p className="whitespace-pre-wrap">{firstError.error}</p>
+                  <p className="text-zinc-600 dark:text-zinc-400">
+                    💡 같은 오류가 반복되면 <strong>모델을 변경</strong>하거나 <strong>다른 파일</strong>로 시도해보세요.
+                    {" "}
+                    <button
+                      type="button"
+                      onClick={() => setSettingsOpen(true)}
+                      className="underline hover:text-zinc-900 dark:hover:text-zinc-100"
+                    >
+                      API 키 확인
+                    </button>
+                    {" · "}
+                    <button
+                      type="button"
+                      onClick={resetAll}
+                      className="underline hover:text-zinc-900 dark:hover:text-zinc-100"
+                    >
+                      처음부터 다시
+                    </button>
+                  </p>
+                </AlertDescription>
+              </Alert>
+            );
+          })()}
+
           <div className="flex flex-wrap items-center gap-3">
             <Button
               onClick={handleStartConvert}
@@ -761,6 +813,11 @@ export function Converter() {
             {batchRunning && (
               <Button variant="outline" onClick={cancelBatch}>
                 취소
+              </Button>
+            )}
+            {(pdfFile || pages.length > 0) && !batchRunning && (
+              <Button variant="ghost" size="sm" onClick={resetAll}>
+                ↺ 초기화
               </Button>
             )}
             <label className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400 ml-auto">
